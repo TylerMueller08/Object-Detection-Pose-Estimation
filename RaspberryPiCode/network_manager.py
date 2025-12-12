@@ -42,34 +42,32 @@ class NetworkManager:
     """
 
     def __init__(self, team_number : int):
-        self.robot_ip = str(team_number) + ".local"  # Assuming the robot's IP is in the format "team_number.local"
+        self.robot_ip = str(team_number) + ".local"  # Assuming the robot's IP is in the format "team_number.local".
         
-        print("Setting up NetworkManager...")
-        print("Robot IP:", self.robot_ip)
+        print("Initializing NetworkManager")
+        print("Configured Robot IP:", self.robot_ip)
         self.nt = ntcore.NetworkTableInstance.getDefault()
 
-        print('Setting up NetworkTable named: "datatable"...')
-        self.data_table = self.nt.getTable("datatable")
-        print("NetworkTable setup complete.")
+        table_name = "vision"
+        self.data_table = self.nt.getTable(table_name)
+        print(f"Connected to NetworkTables: '{table_name}'")
 
         self.setup_camera("Camera")
-        print("Camera setup complete.")
+        print("Established Camera")
 
-        print("Setting up topics...")
         self.setup_topics()
-        print("Topics setup complete.")
+        print("Established NetworkTables Topics")
 
-        self.nt.startClient4("raspberrypi_" + str(team_number))
-        self.nt.setServerTeam(team_number, 0) # where TEAM=5554, 294, 1690, etc
-        print("Starting NetworkTable client...")
-        time.sleep(3) # Wait for the client to start Recommended by the library
-        print("NetworkTable client started.")
+        self.nt.startClient4("orangepi5_" + str(team_number))
+        self.nt.setServerTeam(team_number, 0)
+        time.sleep(3)
+        print("NetworkTables Client Started")
 
     def setup_camera(self, camera_name):
         """ Sets up the camera on the robot. """
-        print("Setting up camera stream...")
-        self.camera_publisher = CameraServer.putVideo(camera_name, 640, 480) # Set the resolution to 640x480 to reduce CPU usage and bandwidth
-        self.camera_publisher.setFPS(15) # Limit the FPS to 15 to limit CPU usage and bandwidth
+        self.camera_publisher = CameraServer.putVideo(camera_name, 640, 480) # Set the resolution to 640x480.
+        self.camera_publisher.setFPS(30) # Limit CPU usage and bandwidth.
+        print("Camera Stream Connected")
     
     def publish_image(self, image : Mat):
         """ Publishes an image to the camera stream. """

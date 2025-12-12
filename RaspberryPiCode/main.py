@@ -62,14 +62,14 @@ def main():
     upper_bound = np.array([31, 255, 255])  # Example upper bound for color detection
 
     # Team number for network management
-    team_number = 5554  # Team number
+    team_number = 4593  # Team number
 
     frame_queue = mp.Queue(maxsize=1)
     detection_queue = mp.Queue(maxsize=1)
     position_queue = mp.Queue(maxsize=1)
 
     # Load estimator data (example data)
-    estimator_data = pd.read_csv('Data/2024-Note/FullData.csv')
+    estimator_data = pd.read_csv('../Data/2024-Note/FullData.csv')
 
     processes = [
         mp.Process(target=frame_capture_process, args=(frame_queue, camera_id, resolution, camera_fps)),

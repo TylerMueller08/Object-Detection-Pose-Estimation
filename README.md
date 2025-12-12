@@ -1,4 +1,4 @@
-# Game Piece Position Estimation
+# Object Detection Pose Estimation
 
 ![Demo](docs/media/AlgorithmShowcase.gif) 
 
