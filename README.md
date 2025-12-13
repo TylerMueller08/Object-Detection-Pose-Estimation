@@ -1,6 +1,6 @@
 # Object Detection Pose Estimation
 
-*A fast, robust, and field-ready algorithm for real-time object pose estimation in FIRST Robotics Competition (FRC) adapted from [YoavRozov's FRC-Game-Piece-Pos-Estimation](https://github.com/YoavRozov/FRC-Game-Piece-Pos-Estimation).*
+*A fast, robust, and field-ready algorithm for real-time object pose estimation in FIRST Robotics Competition (FRC) adapted from [YoavRozov](https://github.com/YoavRozov/FRC-Game-Piece-Pos-Estimation).*
 
 ---
 ## Documentation
