@@ -1,49 +1,12 @@
+from ultralytics import YOLO
 import numpy as np
 import cv2, math
-from rknnlite.api import RKNNLite
 
-class ObjectDetection:
-    def __init__(self, rknn_path, input_size=(640, 640), conf_thresh=0.4):
-        self.input_size = input_size
+class PtObjectDetection:
+    def __init__(self, model_path, conf_thresh=0.4):
+        self.model = YOLO(model_path)
         self.conf_thresh = conf_thresh
-        self.rknn = RKNNLite()
 
-        ret = self.rknn.load_rknn(rknn_path)
-        if ret != 0:
-            raise RuntimeError("Error: Failed to load RKNN model.")
-        ret = self.rknn.init_runtime()
-        if ret != 0:
-            raise RuntimeError("Error: Failed to initialize RKNN runtime.")
-        
-    def preprocess(self, frame):
-        # img = cv2.resize(frame, self.input_size) # Stretches, not letterboxing (fix if needed).
-        img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        img = img.astype(np.float32) / 255.0
-        img = np.expand_dims(img, axis=0)
-        return img
-
-    def postprocess(self, outputs, orig_shape):
-        h0, w0, _ = orig_shape
-        detections = outputs[0]
-
-        if detections is None or len(detections) == 0:
-            return None
-        
-        best = max(detections, key=lambda d: d[4])
-        if best[4] < self.conf_thresh:
-            return None
-        
-        cx, cy, w, h = best[:4]
-        cx *= w0
-        cy *= h0
-        w *= w0
-        h *= h0
-
-        x = int(cx - w / 2)
-        y = int(cy - h / 2)
-
-        return np.array([x, y, int(w), int(h)], dtype=np.int32)
-    
     def find_angle(self, contour):
         if len(contour) < 2:
             return 0.0
@@ -82,16 +45,22 @@ class ObjectDetection:
         return avg_angle
 
     def detect(self, frame):
-        inp = self.preprocess(frame)
-        outputs = self.rknn.inference(inputs=[inp])
+        results = self.model.predict(source=frame, conf=self.conf_thresh, verbose=False)
 
-        rect = self.postprocess(outputs, frame.shape)
-        if rect is None:
+        if not results or len(results[0].boxes) == 0:
             return None
         
-        x, y, w, h = rect
-        roi = frame[y:y+h, x:x+w]
+        boxes = results[0].boxes
+        best = boxes[boxes.conf.argmax()]
+        
+        x1, y1, x2, y2 = best.xyxy[0].cpu().numpy().astype(int)
+        w = x2 - x1
+        h = y2 - y1
 
+        roi = frame[y1:y2, x1:x2]
+        if roi.size == 0:
+            return None
+        
         gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
         edges = cv2.Canny(gray, 50, 150)
         contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -99,4 +68,4 @@ class ObjectDetection:
         contour = max(contours, key=cv2.contourArea) if contours else None
         angle = self.find_angle(contour)
 
-        return np.array([x, y, w, h, angle], dtype=np.float32)
+        return np.array([x1, y1, w, h, angle], dtype=np.float32)

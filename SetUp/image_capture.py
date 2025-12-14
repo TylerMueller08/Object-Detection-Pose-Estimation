@@ -1,15 +1,15 @@
 import cv2
 
 # =------ Configure these variables ------=
-# Camera index, change this if you have multiple cameras connected
+# Camera index, change this if you have multiple cameras connected.
 CAMERA_INDEX = 0
 
-# Output image path
-OUTPUT_IMAGE_PATH = "SetUp"
-
-# Resolution
+# Camera Resolution
 FRAME_WIDTH = 1280
 FRAME_HEIGHT = 960
+
+# Output image path.
+OUTPUT_IMAGE_PATH = "SetUp"
 # =---------------------------------------=
 
 # Initialize camera
@@ -22,19 +22,19 @@ i = 0
 while True:
     ret, frame = cap.read()
     if not ret:
-        print("Failed to grab frame")
+        print("Failed to retrieve frame.")
         break
 
     cv2.imshow("Camera", frame)
 
     key = cv2.waitKey(1)
-    if key % 256 == 27:  # ESC pressed
-        print("Escape hit, closing...")
+    if key % 256 == 27:
+        print("Escape pressed, closing application.")
         break
-    elif key % 256 == ord('q'):  # 'q' pressed
-        print("Quit hit, closing...")
+    elif key % 256 == ord('q'):
+        print("Quit pressed, closing application.")
         break
-    elif key % 256 == 32:  # SPACE pressed
+    elif key % 256 == 32:
         img_name = f"{OUTPUT_IMAGE_PATH}/calibration_image_{i}.png"
         i += 1
         cv2.imwrite(img_name, frame)

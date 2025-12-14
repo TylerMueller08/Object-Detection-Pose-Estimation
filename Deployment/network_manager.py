@@ -5,7 +5,7 @@ import time
 
 class NetworkManager:
     def __init__(self, team_number : int):
-        self.robot_ip = str(team_number) + ".local"  # Robot's IP is "team_number.local".
+        self.robot_ip = str(team_number) + ".local" # Robot's IP is "team_number.local".
         
         print("Initializing NetworkManager")
         print("Configured Robot IP:", self.robot_ip)
@@ -27,13 +27,11 @@ class NetworkManager:
         print("NetworkTables Client Started")
 
     def setup_camera(self, camera_name):
-        """ Sets up the camera on the robot. """
         self.camera_publisher = CameraServer.putVideo(camera_name, 640, 480) # Set the resolution to 640x480.
         self.camera_publisher.setFPS(30) # Limit CPU usage and bandwidth.
         print("Camera Stream Connected")
     
     def publish_image(self, image : Mat):
-        """ Publishes an image to the camera stream. """
         self.camera_publisher.putFrame(image)
 
     def setup_topics(self):
