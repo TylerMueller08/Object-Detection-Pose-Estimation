@@ -16,5 +16,4 @@ class FrameCapture:
             start_time = time.time()
             ret, frame = self.cap.read()
             if ret:
-                # print("FPS:", 1 / (time.time() - start_time))
                 return (frame, start_time)

@@ -5,7 +5,7 @@ import time
 
 class NetworkManager:
     def __init__(self, team_number : int):
-        self.robot_ip = str(team_number) + ".local" # Robot's IP is "team_number.local".
+        self.robot_ip = str(team_number) + ".local" # Robot's IP is "team_number.local", or "127.0.0.1" if simulation.
         
         print("Initializing NetworkManager")
         print("Configured Robot IP:", self.robot_ip)
@@ -15,14 +15,14 @@ class NetworkManager:
         self.data_table = self.nt.getTable(table_name)
         print(f"Connected to NetworkTables: '{table_name}'")
 
-        self.setup_camera("Camera")
+        self.setup_camera("DebugCamera")
         print("Established Camera")
 
         self.setup_topics()
         print("Established NetworkTables Topics")
 
         self.nt.startClient4("orangepi5_" + str(team_number))
-        self.nt.setServerTeam(team_number, 0)
+        self.nt.setServerTeam(team_number) # or self.nt.setServer("127.0.0.1") if simulaton.
         time.sleep(3)
         print("NetworkTables Client Started")
 
@@ -36,22 +36,16 @@ class NetworkManager:
 
     def setup_topics(self):
         self.topics = {
-            "objectPositionX" : self.data_table.getDoubleTopic("objectPositionX"),
-            "objectPositionY" : self.data_table.getDoubleTopic("objectPositionY"),
-            "objectAngle" : self.data_table.getDoubleTopic("objectAngle"),
+            "objectPose" : self.data_table.getDoubleArrayTopic("objectPose"),
             "objectConfidence" : self.data_table.getDoubleTopic("objectConfidence")
         }
 
         self.publishers = {
-            "objectPositionX" : self.topics["objectPositionX"].publish(),
-            "objectPositionY" : self.topics["objectPositionY"].publish(),
-            "objectAngle" : self.topics["objectAngle"].publish(),
+            "objectPose" : self.topics["objectPose"].publish(),
             "objectConfidence" : self.topics["objectConfidence"].publish()
         }        
 
-    def publish_game_piece_position(self, x, y, a, certainty=0.0):
+    def publish_game_piece_position(self, x_position, y_position, angle, confidence):
         timestamp = ntcore._now()
-        self.publishers["objectPositionX"].set(x, timestamp)
-        self.publishers["objectPositionY"].set(y, timestamp)
-        self.publishers["objectAngle"].set(a, timestamp)
-        self.publishers["objectConfidence"].set(certainty, timestamp)
+        self.publishers["objectPose"].set([x_position, y_position, angle], timestamp)
+        self.publishers["objectConfidence"].set(confidence, timestamp)
