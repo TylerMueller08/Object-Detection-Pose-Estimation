@@ -10,13 +10,15 @@ def frame_capture_process(frame_queue : mp.Queue, camera_id : int, resolution : 
     frame_capture = FrameCapture(camera_id, resolution, fps)
     while True:
         frame, timestamp = frame_capture.capture_frame()
+        if frame is None:
+            break
         try:
             frame_queue.put((frame, timestamp), timeout=0.01)
         except queue.Full:
             pass
 
-def detection_process(frame_queue : mp.Queue, detection_queue : mp.Queue, debug_queue : mp.Queue, model_path : str):
-    detector = ObjectDetection(model_path)
+def detection_process(frame_queue : mp.Queue, detection_queue : mp.Queue, debug_queue : mp.Queue, model_path : str, backend : str):
+    detector = ObjectDetection(model_path, backend)
     while True:
         try:
             frame, timestamp = frame_queue.get(timeout=0.01)
@@ -46,17 +48,17 @@ def position_estimation_process(detection_queue : mp.Queue, position_queue : mp.
             try:
                 position_queue.put((position, confidence, timestamp), timeout=0.01)
             except queue.Full:
-
                 pass
 
-def network_management_process(debug_queue : mp.Queue, position_queue : mp.Queue, team_number : int):
-    network_manager = NetworkManager(team_number)
+def network_management_process(debug_queue : mp.Queue, position_queue : mp.Queue, team_number : int, simulation : bool, debug_stream : bool):
+    network_manager = NetworkManager(team_number, simulation, debug_stream)
     while True:
-        try:
-            frame = debug_queue.get(timeout=0.01)
-            network_manager.publish_image(frame)
-        except queue.Empty:
-            pass
+        if debug_stream:
+            try:
+                frame = debug_queue.get(timeout=0.01)
+                network_manager.publish_image(frame)
+            except queue.Empty:
+                pass
 
         try:
             position, confidence, timestamp = position_queue.get(timeout=0.01)
@@ -73,9 +75,12 @@ def main():
 
     # Train YOLO model.
     model_path = "resources/Coral-640-640-yolov11n.pt"
+    backend = "pt" # Choose "pt" or "rknn".
 
     # Team Number for NetworkTable.
     team_number = 4593
+    simulation = False
+    debug_stream = True
 
     frame_queue = mp.Queue(maxsize=1)
     detection_queue = mp.Queue(maxsize=1)
@@ -83,13 +88,13 @@ def main():
     debug_queue = mp.Queue(maxsize=1)
 
     # Load estimator data (example data).
-    estimator_data = pd.read_csv('../Data/2025-Coral/FullData.csv') # Need to run ourselves.
+    estimator_data = pd.read_csv('resources/CoralData.csv') # Todo: Run with desired camera configuration.
 
     processes = [
         mp.Process(target=frame_capture_process, args=(frame_queue, camera_id, camera_resolution, camera_fps)),
-        mp.Process(target=detection_process, args=(frame_queue, detection_queue, debug_queue, model_path)),
+        mp.Process(target=detection_process, args=(frame_queue, detection_queue, debug_queue, model_path, backend)),
         mp.Process(target=position_estimation_process, args=(detection_queue, position_queue, estimator_data)),
-        mp.Process(target=network_management_process, args=(debug_queue, position_queue, team_number))
+        mp.Process(target=network_management_process, args=(debug_queue, position_queue, team_number, simulation, debug_stream))
     ]
 
     for process in processes:

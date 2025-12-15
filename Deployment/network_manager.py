@@ -4,8 +4,8 @@ from cv2 import Mat
 import time
 
 class NetworkManager:
-    def __init__(self, team_number : int):
-        self.robot_ip = str(team_number) + ".local" # Robot's IP is "team_number.local", or "127.0.0.1" if simulation.
+    def __init__(self, team_number : int, simulation : bool, debug_stream : bool):
+        self.robot_ip = "127.0.0.1" if simulation else str(team_number) + ".local"
         
         print("Initializing NetworkManager")
         print("Configured Robot IP:", self.robot_ip)
@@ -15,14 +15,18 @@ class NetworkManager:
         self.data_table = self.nt.getTable(table_name)
         print(f"Connected to NetworkTables: '{table_name}'")
 
-        self.setup_camera("DebugCamera")
-        print("Established Camera")
+        if debug_stream:
+            self.setup_camera("DebugObjectDetection")
+            print("Established Camera")
 
         self.setup_topics()
         print("Established NetworkTables Topics")
 
         self.nt.startClient4("orangepi5_" + str(team_number))
-        self.nt.setServerTeam(team_number) # or self.nt.setServer("127.0.0.1") if simulaton.
+        if simulation:
+            self.nt.setServer("127.0.0.1")
+        else:
+            self.nt.setServerTeam(team_number)
         time.sleep(3)
         print("NetworkTables Client Started")
 

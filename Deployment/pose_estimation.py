@@ -7,7 +7,7 @@ class PoseEstimation:
         self.height = height
         self.data = data
     
-    def find_matching_rows(self, df, target, start_tol=25, max_tol=40, step=3):
+    def find_matching_rows(self, df, target, start_tol=20, max_tol=40, step=5):
         tolerance = start_tol
         while tolerance <= max_tol:
             mask = (
@@ -29,8 +29,21 @@ class PoseEstimation:
     
     def estimate_position(self, rectangle: np.ndarray):
         x, y, w, h, a = rectangle
+
+        if a is None or np.isnan(a):
+            return None
+
         center_x = x + w / 2
         center_y = y + h / 2
+
+        # Pre-filtering
+        df = self.data[
+            (self.data['width'].between(w - 60, w + 60)) &
+            (self.data['height'].between(h - 60, h + 60))
+        ]
+
+        if df.empty:
+            return None
 
         target = {
             'Center_X': center_x,
@@ -39,7 +52,7 @@ class PoseEstimation:
             'Height': h,
             'Angle': a
         }
-        matching_rows = self.find_matching_rows(self.data, target)
+        matching_rows = self.find_matching_rows(df, target)
 
         if not matching_rows.empty:
             return (
