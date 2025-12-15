@@ -6,14 +6,14 @@ CAMERA_INDEX = 0
 
 # Camera Resolution
 FRAME_WIDTH = 1280
-FRAME_HEIGHT = 960
+FRAME_HEIGHT = 800
 
 # Output image path.
-OUTPUT_IMAGE_PATH = "SetUp"
+OUTPUT_IMAGE_PATH = "Setup"
 # =---------------------------------------=
 
 # Initialize camera
-cap = cv2.VideoCapture(CAMERA_INDEX)
+cap = cv2.VideoCapture(CAMERA_INDEX, cv2.CAP_DSHOW)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, FRAME_WIDTH)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT)
 
@@ -22,7 +22,7 @@ i = 0
 while True:
     ret, frame = cap.read()
     if not ret:
-        print("Failed to retrieve frame.")
+        print("Error: Failed to retrieve frame.")
         break
 
     cv2.imshow("Camera", frame)
