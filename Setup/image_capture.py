@@ -6,10 +6,10 @@ CAMERA_INDEX = 0
 
 # Camera Resolution
 FRAME_WIDTH = 1280
-FRAME_HEIGHT = 800
+FRAME_HEIGHT = 720
 
 # Output image path.
-OUTPUT_IMAGE_PATH = "Setup"
+OUTPUT_IMAGE_PATH = "Data/Images"
 # =---------------------------------------=
 
 # Initialize camera

@@ -70,7 +70,7 @@ def network_management_process(debug_queue : mp.Queue, position_queue : mp.Queue
 def main():
     # Camera Resolution & Settings.
     camera_id = 0
-    camera_resolution = (1280, 800)
+    camera_resolution = (1280, 720)
     camera_fps = 30
 
     # Train YOLO model.
