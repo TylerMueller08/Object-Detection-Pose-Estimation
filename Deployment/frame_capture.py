@@ -26,7 +26,7 @@ class FrameCapture:
     
     def capture_frame(self):
         while True:
-            start_time = time.time()
             ret, frame = self.cap.read()
             if ret:
-                return (frame, start_time)
+                timestamp = time.monotonic()
+                return frame, timestamp

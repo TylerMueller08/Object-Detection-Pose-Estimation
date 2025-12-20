@@ -28,8 +28,7 @@ def detection_process(frame_queue : mp.Queue, detection_queue : mp.Queue, debug_
         rect, confidence, debug_frame = detector.detect(frame)
 
         try:
-            if rect is not None:
-                detection_queue.put((rect, confidence, timestamp))
+            detection_queue.put((rect, confidence, timestamp), timeout=0.01)
             if debug_queue is not None:
                 debug_queue.put(debug_frame)
         except queue.Full:
@@ -43,8 +42,10 @@ def position_estimation_process(detection_queue : mp.Queue, position_queue : mp.
         except queue.Empty:
             continue
     
-        position = estimator.estimate_position(rect)
-        if position is not None:
+        position = None
+        if rect is not None:
+            position = estimator.estimate_position(rect)
+
             try:
                 position_queue.put((position, confidence, timestamp), timeout=0.01)
             except queue.Full:
@@ -62,8 +63,7 @@ def network_management_process(debug_queue : mp.Queue, position_queue : mp.Queue
 
         try:
             position, confidence, timestamp = position_queue.get(timeout=0.01)
-            x, y, angle = position
-            network_manager.publish_game_piece_position(x, y, angle, confidence)
+            network_manager.publish_game_piece_position(position, confidence, timestamp)
         except queue.Empty:
             pass
 
@@ -79,7 +79,7 @@ def main():
 
     # Team Number for NetworkTable.
     team_number = 4593
-    simulation = False
+    simulation = True
     debug_stream = True
 
     frame_queue = mp.Queue(maxsize=1)
