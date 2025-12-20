@@ -25,10 +25,10 @@ def detection_process(frame_queue : mp.Queue, detection_queue : mp.Queue, debug_
         except queue.Empty:
             continue
 
-        rect, confidence, debug_frame = detector.detect(frame)
+        rect, debug_frame = detector.detect(frame)
 
         try:
-            detection_queue.put((rect, confidence, timestamp), timeout=0.01)
+            detection_queue.put((rect, timestamp), timeout=0.01)
             if debug_queue is not None:
                 debug_queue.put(debug_frame)
         except queue.Full:
@@ -36,20 +36,23 @@ def detection_process(frame_queue : mp.Queue, detection_queue : mp.Queue, debug_
 
 def position_estimation_process(detection_queue : mp.Queue, position_queue : mp.Queue, estimator_data : pd.DataFrame):
     estimator = PoseEstimation(1280, 720, estimator_data)
+    last_valid_position = None
     while True:
         try:
-            rect, confidence, timestamp = detection_queue.get(timeout=0.01)
+            rect, timestamp = detection_queue.get(timeout=0.01)
         except queue.Empty:
             continue
     
-        position = None
-        if rect is not None:
-            position = estimator.estimate_position(rect)
+        position = estimator.estimate_position(rect) if rect is not None else None
+        if position is not None:
+            last_valid_position = position
+        else:
+            position = last_valid_position
 
-            try:
-                position_queue.put((position, confidence, timestamp), timeout=0.01)
-            except queue.Full:
-                pass
+        try:
+            position_queue.put((position, timestamp), timeout=0.01)
+        except queue.Full:
+            pass
 
 def network_management_process(debug_queue : mp.Queue, position_queue : mp.Queue, team_number : int, simulation : bool, debug_stream : bool):
     network_manager = NetworkManager(team_number, simulation, debug_stream)
@@ -62,8 +65,8 @@ def network_management_process(debug_queue : mp.Queue, position_queue : mp.Queue
                 pass
 
         try:
-            position, confidence, timestamp = position_queue.get(timeout=0.01)
-            network_manager.publish_game_piece_position(position, confidence, timestamp)
+            position, timestamp = position_queue.get(timeout=0.01)
+            network_manager.publish_game_piece_position(position, timestamp)
         except queue.Empty:
             pass
 
@@ -71,7 +74,7 @@ def main():
     # Camera Resolution & Settings.
     camera_id = 0
     camera_resolution = (1280, 720)
-    camera_fps = 30
+    camera_fps = 60
 
     # Train YOLO model.
     model_path = "resources/Coral-640-640-yolov11n.pt"
@@ -82,10 +85,10 @@ def main():
     simulation = True
     debug_stream = True
 
-    frame_queue = mp.Queue(maxsize=1)
-    detection_queue = mp.Queue(maxsize=1)
-    position_queue = mp.Queue(maxsize=1)
-    debug_queue = mp.Queue(maxsize=1)
+    frame_queue = mp.Queue(maxsize=5)
+    detection_queue = mp.Queue(maxsize=5)
+    position_queue = mp.Queue(maxsize=5)
+    debug_queue = mp.Queue(maxsize=5)
 
     # Load estimator data (example data).
     estimator_data = pd.read_csv('resources/CoralData.csv') # Todo: Run with desired camera configuration.

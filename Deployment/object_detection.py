@@ -78,28 +78,27 @@ class ObjectDetection:
             results = self.model.predict(source=frame, conf=self.conf_thresh, verbose=False)
 
             if not results or len(results[0].boxes) == 0:
-                return None, 0.0, frame
+                return None, frame
             
             boxes = results[0].boxes
             index = int(boxes.conf.argmax())
             best = boxes[index]
             
             x1, y1, x2, y2 = best.xyxy[0].cpu().numpy().astype(int)
-            confidence = float(best.conf.cpu().numpy())
 
         elif self.backend == "rknn":
             img, scale, left, top = self.letterbox(frame)
             img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
             outputs = self.rknn.inference(inputs=[img_rgb])
-            detections = outputs[0] # Todo: Doublecheck output. [N, 5] -> x1, y1, x2, y2, confidence.
+            detections = outputs[0] # Todo: Doublecheck output. [N, 5] -> x1, y1, x2, y2.
 
             if detections is None or len(detections) == 0:
-                return None, 0.0, frame
+                return None, frame
             
             detections = np.array(detections)
             best_index = detections[:, 4].argmax()
-            x1, y1, x2, y2, confidence = detections[best_index]
+            x1, y1, x2, y2 = detections[best_index]
 
             x1 = int((x1 - left) / scale)
             y1 = int((y1 - top) / scale)
@@ -121,7 +120,7 @@ class ObjectDetection:
 
         roi = frame[y1:y2, x1:x2]
         if roi.size == 0:
-            return None, 0.0, frame
+            return None, frame
         
         gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
         edges = cv2.Canny(gray, 50, 150)
@@ -134,4 +133,4 @@ class ObjectDetection:
         cv2.rectangle(debug_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
         rect = np.array([x1, y1, w, h, angle], dtype=np.float32)
 
-        return rect, confidence, debug_frame
+        return rect, debug_frame

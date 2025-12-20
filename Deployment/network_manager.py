@@ -45,17 +45,15 @@ class NetworkManager:
     def setup_topics(self):
         self.topics = {
             "objectPose" : self.data_table.getDoubleArrayTopic("objectPose"),
-            "objectConfidence" : self.data_table.getDoubleTopic("objectConfidence"),
             "objectLatencySec" : self.data_table.getDoubleTopic("objectLatencySec")
         }
 
         self.publishers = {
             "objectPose" : self.topics["objectPose"].publish(),
-            "objectConfidence" : self.topics["objectConfidence"].publish(),
             "objectLatencySec" : self.topics["objectLatencySec"].publish()
         }        
 
-    def publish_game_piece_position(self, position, confidence, capture_timestamp):
+    def publish_game_piece_position(self, position, capture_timestamp):
         publish_time = time.monotonic()
         latency = publish_time - capture_timestamp
 
@@ -63,11 +61,9 @@ class NetworkManager:
 
         if position is None:
             pose = [math.nan, math.nan, math.nan]
-            confidence = 0.0
         else:
             x, y, angle = position
             pose = [x, y, angle]
 
         self.publishers["objectPose"].set(pose, nt_timestamp)
-        self.publishers["objectConfidence"].set(confidence, nt_timestamp)
         self.publishers["objectLatencySec"].set(latency, nt_timestamp)
