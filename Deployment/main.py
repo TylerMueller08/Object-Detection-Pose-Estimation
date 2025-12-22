@@ -1,6 +1,5 @@
-import multiprocessing as mp
 import queue
-import pandas as pd
+import multiprocessing as mp
 from frame_capture import FrameCapture
 from object_detection import ObjectDetection
 from pose_estimation import PoseEstimation
@@ -34,8 +33,8 @@ def detection_process(frame_queue : mp.Queue, detection_queue : mp.Queue, debug_
         except queue.Full:
             pass
 
-def position_estimation_process(detection_queue : mp.Queue, position_queue : mp.Queue, estimator_data : pd.DataFrame):
-    estimator = PoseEstimation(1280, 720, estimator_data)
+def position_estimation_process(detection_queue : mp.Queue, position_queue : mp.Queue, regression_path : str):
+    estimator = PoseEstimation(regression_path)
     last_valid_position = None
     while True:
         try:
@@ -78,6 +77,7 @@ def main():
 
     # Train YOLO model.
     model_path = "resources/Coral-640-640-yolov11n.pt"
+    regression_path = "resources/regression.pt"
     backend = "pt" # Choose "pt" or "rknn".
 
     # Team Number for NetworkTable.
@@ -90,13 +90,10 @@ def main():
     position_queue = mp.Queue(maxsize=5)
     debug_queue = mp.Queue(maxsize=5)
 
-    # Load estimator data (example data).
-    estimator_data = pd.read_csv('resources/CoralData.csv') # Todo: Run with desired camera configuration.
-
     processes = [
         mp.Process(target=frame_capture_process, args=(frame_queue, camera_id, camera_resolution, camera_fps)),
         mp.Process(target=detection_process, args=(frame_queue, detection_queue, debug_queue, model_path, backend)),
-        mp.Process(target=position_estimation_process, args=(detection_queue, position_queue, estimator_data)),
+        mp.Process(target=position_estimation_process, args=(detection_queue, position_queue, regression_path)),
         mp.Process(target=network_management_process, args=(debug_queue, position_queue, team_number, simulation, debug_stream))
     ]
 
