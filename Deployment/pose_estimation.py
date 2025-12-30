@@ -26,6 +26,6 @@ class PoseEstimation:
 
         with torch.no_grad():
             pred = self.model(input_data)
-            world_x, world_y, world_yaw = pred[0].cpu().numpy().tolist()
+            world_x, world_y = pred[0].cpu().numpy().tolist()
 
-        return world_x, world_y, world_yaw
+        return world_x, world_y

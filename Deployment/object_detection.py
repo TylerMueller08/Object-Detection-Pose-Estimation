@@ -1,5 +1,5 @@
 import numpy as np
-import cv2, math
+import cv2
 
 class ObjectDetection:
     def __init__(self, model_path, backend="pt", conf_thresh=0.4, input_size=(640, 640)):
@@ -22,7 +22,7 @@ class ObjectDetection:
             self.rknn.load_rknn(model_path)
             self.rknn.init_runtime()
         else:
-            raise ValueError('Backend must be either "pt" or "rknn"')
+            raise ValueError('Error: Backend must be either "pt" or "rknn"')
 
     def letterbox(self, image):
         h, w = image.shape[:2]
@@ -59,7 +59,7 @@ class ObjectDetection:
             img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
             outputs = self.rknn.inference(inputs=[img_rgb])
-            detections = outputs[0] # Todo: Doublecheck output. [N, 5] -> x1, y1, x2, y2.
+            detections = outputs[0]
 
             if detections is None or len(detections) == 0:
                 return None, frame

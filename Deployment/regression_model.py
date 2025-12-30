@@ -11,7 +11,7 @@ class PoseMLP(nn.Module):
             nn.ReLU(),
             nn.Linear(128, 64),
             nn.ReLU(),
-            nn.Linear(64, 3)
+            nn.Linear(64, 2)
         )
 
     def forward(self, x):

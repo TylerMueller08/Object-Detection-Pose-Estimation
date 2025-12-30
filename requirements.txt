@@ -2,5 +2,5 @@ opencv-python
 numpy
 pandas
 ntcore
-cscore
-opencv-contrib-python
+robotpy-cscore==2025.3.2.3
+# robotpy-cscore==2026.1.1b1
