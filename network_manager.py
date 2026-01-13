@@ -11,10 +11,8 @@ class NetworkManager:
         print("Configured Robot IP:", self.robot_ip)
         
         self.nt = ntcore.NetworkTableInstance.getDefault()
-
         table_name = "ObjectDetection"
         self.data_table = self.nt.getTable(table_name)
-
         print(f"Connected to NetworkTables: '{table_name}'")
 
         if debug_stream:
@@ -25,7 +23,6 @@ class NetworkManager:
         print("Established NetworkTables Topics")
 
         self.nt.startClient4("orangepi5_" + str(team_number))
-
         if simulation:
             self.nt.setServer("127.0.0.1")
         else:
@@ -44,26 +41,23 @@ class NetworkManager:
 
     def setup_topics(self):
         self.topics = {
-            "objectPose" : self.data_table.getDoubleArrayTopic("objectPose"),
-            "objectLatency" : self.data_table.getDoubleTopic("objectLatency")
+            "objectDensity" : self.data_table.getDoubleArrayTopic("objectDensity")
         }
 
         self.publishers = {
-            "objectPose" : self.topics["objectPose"].publish(),
-            "objectLatency" : self.topics["objectLatency"].publish()
+            "objectDensity" : self.topics["objectDensity"].publish()
         }        
 
-    def publish_game_piece_position(self, position, capture_timestamp):
+    def publish_game_piece_position(self, object_density, capture_timestamp):
         publish_time = time.monotonic()
         latency = publish_time - capture_timestamp
 
         nt_timestamp = int(capture_timestamp * 1e6)
 
-        if position is None:
-            pose = [math.nan, math.nan]
+        if object_density is None:
+            data = [math.nan, math.nan]
         else:
-            x, y = position
-            pose = [y, -x]
+            x_error, y_error = object_density
+            data = [x_error, y_error]
 
-        self.publishers["objectPose"].set(pose, nt_timestamp)
-        self.publishers["objectLatency"].set(latency, nt_timestamp)
+        self.publishers["objectDensity"].set(data, nt_timestamp)

@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 
+# Likely remove this because we will no longer need a 3d pose, just a 2d pose location for x and y error.
 class PoseEstimation:
     def __init__(self, model_path: str):
         from regression_model import PoseMLP
